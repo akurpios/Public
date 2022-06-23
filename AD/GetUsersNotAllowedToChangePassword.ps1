@@ -1,0 +1,1 @@
+ get-ADuser -Filter * -Properties CannotChangePassword -SearchBase "OU=Users,OU=Accounts,OU=Production,DC=Domain,DC=com" | where {$_.CannotChangePassword} | Sort-Object {$_.samAccountName} | select samAccountName > output.txt  -NoTypeInformation -Encoding UTF8
