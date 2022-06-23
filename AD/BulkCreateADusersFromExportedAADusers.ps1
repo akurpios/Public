@@ -1,5 +1,22 @@
 Import-Csv "C:\Users\Administrator\Desktop\exportUser_2021-8-3.csv" -Delimiter ',' |
- 
+
+$credits=@"
+#
+#
+#
+#SCRIPT CREATED BY ALEKSANDER KUPRIOS
+#ALL RIGHTS RESERVED
+#CONTACT: kontakt@kurpios.it
+#
+#
+#
+#LOGs file (TVHost_LogFile.txt) available at TEMP folder. 
+########################################################################
+
+"@
+
+Write-Host $credits
+
 ForEach-Object { 
 New-ADUser `
 -SamAccountName $_."name" `
