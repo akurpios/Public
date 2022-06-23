@@ -7,8 +7,28 @@ Import-CSV Input.csv | ForEach-Object {
 $fileA = @(Get-Content Input.csv).Length
 $fileB = @(Get-Content Output.csv).Length
 $fileB = $fileB-1
+
+$credits=@"
+#
+#
+#
+#SCRIPT CREATED BY ALEKSANDER KUPRIOS
+#ALL RIGHTS RESERVED
+#CONTACT: kontakt@kurpios.it
+#
+#
+#
+#LOGs file (TVHost_LogFile.txt) available at TEMP folder. 
+########################################################################
+
+"@
+
+Write-Host $credits
+
 Write-Host "Input file lines ="$fileA
 Write-Host "Output file lines ="$fileB
+
+
 
 if ($fileB -eq $fileA)
 {
