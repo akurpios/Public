@@ -1,14 +1,6 @@
-Hello,
-
-This is the script just for showing macOS notifications with basic macOS stats in chosen time intervals (default set to 60s).
-Shown information:
-- uptime,
-- CPU usage,
-- RAM used,
-- RAM Free,
-- Swap usage.
-
-You can see how these notifications look in the image.png file.
+Update:
+1. Follow the Uninstallation guide for your current version,
+2. Follow the Intallation guide for the current version.
 
 Installation:
 1. Download MacUserNotifier.zip to the Downloads folder,
