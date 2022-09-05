@@ -8,7 +8,7 @@ Shown information:
 - RAM Free,
 - Swap usage.
 
-You can see the does the notification looks in image.png file.
+You can see how these notifications look in the image.png file.
 
 Installation:
 1. Download MacUserNotifier.zip to Downloads folder,
