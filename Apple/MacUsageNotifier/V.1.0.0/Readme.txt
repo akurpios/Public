@@ -30,3 +30,10 @@ Change interval of notification:
 
 
 Since 04 Sept 2022 This tool is free for personal use. For commercial use please contact kontakt@kurpios.it.
+
+After installation please fill the survery :)
+https://forms.office.com/r/84PH80r5TU
+
+If you really like my script you can donate to me here:
+https://www.paypal.com/donate/?hosted_button_id=Z8USXRAD2QQ3C
+:)
