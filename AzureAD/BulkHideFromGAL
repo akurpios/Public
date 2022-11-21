@@ -1,0 +1,18 @@
+Import-Csv "C:\Support\Scripts\BulkHideFromGal\OffboardedUsers.csv" -Delimiter ',' |
+ 
+ForEach-Object { 
+$SAMA = $_.samAccountName
+$UPN = $_.UserPrincipalName
+$DisplayName = $_.displayName
+
+$mailnickname = $upn.Split('@')[0]
+Set-ADUser $SAMA -replace @{'msExchHideFromAddressLists' = "TRUE" }
+Set-ADUser $SAMA -replace @{'mailNickname' = $mailnickname}
+
+Write-Host " DisplayName=" $DisplayName -NoNewline
+Write-Host " SAMA=" $SAMA -NoNewline
+Write-Host " UPN=" $UPN -NoNewline
+Write-Host " mailnickname=" $mailnickname
+write-host "*******************************`r`n"
+write-host 
+} 
