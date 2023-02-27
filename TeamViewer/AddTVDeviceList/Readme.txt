@@ -1,3 +1,5 @@
+This script allow us to bulk import Devices to the TeamViewer management console.
+
 Before taking any action please do following:
 1. login to login.teamviewer.com
 2. on your profile go to Edit Profile > Apps > Create script token
