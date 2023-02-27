@@ -1,5 +1,5 @@
 cls
-$csvFile = "C:\Users\aleksander.kurpios\temp\TeamViewerDevicesTEST.csv"
+$csvFile = ".\example.csv"
 $tvAccessToken = read-host "Please type your token "
 
  $headers = @{}
