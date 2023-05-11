@@ -12,7 +12,7 @@ $UPN = $_.UserPrincipalName
 $DisplayName = $_.displayName
 
 Write-Host "PERFORMING ACTION FOR: "$DisplayName "`r`n" -BackgroundColor Blue
-Set-Mailbox -Identity $Identity -GrantSendOnBehalfTo $UPN
+Set-Mailbox -Identity $Identity -GrantSendOnBehalfTo @{add=$UPN}
 If($?)  
  {  
  Write-Host $UPN Successfully added to $Identity as SendOnBehalf -ForegroundColor Green 
