@@ -20,7 +20,7 @@ if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
     Connect-ExchangeOnline
     } 
 else {
-    Write-Host ExchangeOnlineManagement Module not installed. Please install the MSOnline module using below command: `nInstall-Module ExchangeOnlineManagement  -ForegroundColor yellow
+    Write-Host "ExchangeOnlineManagement Module not installed. Please install the MSOnline module using below command: `nInstall-Module ExchangeOnlineManagement"  -ForegroundColor yellow
     #Install-Module MSOnline
     Pause
     exit
