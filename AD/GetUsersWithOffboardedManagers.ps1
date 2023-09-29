@@ -1,0 +1,1 @@
+Get-ADUser -Properties *  -Filter * | Where-Object {$_.Manager -like "*offboarded*"} | select Name, SamAccountName, Manager | Export-Csv C:\Users\akurpios\Desktop\UsersWithOffboardedManagers.csv -Encoding UTF8 -NoTypeInformation
