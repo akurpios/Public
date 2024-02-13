@@ -28,7 +28,7 @@ write-host "Day 0 used by Veeam will be: " $CurrentDateMidnight
 
 ##Getting Veeam jobs##
 
-$jobs=get-vbojob | select ID
+$jobs=get-vbojob | Where-Object {$_.IsEnabled -eq $true} | Select ID
 
 $jobscount = $jobs.Count
 write-host "There are " $jobscount " jobs in Veeam"
