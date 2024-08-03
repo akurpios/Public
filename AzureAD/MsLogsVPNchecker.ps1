@@ -40,7 +40,7 @@ Import-Csv -Path $TempMScsvPath | ForEach-Object {
   Write-Host $URL
 
   #Obtain VPN data
-  #curl $URL | ConvertFrom-Json | ConvertTo-Csv >> $OutPath
+  curl $URL | ConvertFrom-Json | ConvertTo-Csv >> $OutPath
 }
 Write-Host "Script Finished"
 pause
