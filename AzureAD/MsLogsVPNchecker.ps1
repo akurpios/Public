@@ -4,7 +4,7 @@ cls
 
 #Echo
 echo "----------------------------------"
-echo "EntraID SignIn Logs checker for VPNAPI.IO"
+echo "EntraID SignIn Logs VPN checker for VPNAPI.IO"
 echo "By Aleksander Kurpios"
 echo "----------------------------------"
 
