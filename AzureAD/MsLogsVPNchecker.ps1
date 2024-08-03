@@ -1,11 +1,23 @@
+
 #Wipe terminal
 cls
 
-#Create Variables
+#Echo
+echo "----------------------------------"
+echo "EntraID SignIn Logs checker for VPNAPI.IO"
+echo "By Aleksander Kurpios"
+echo "----------------------------------"
+
+#Pause
+pause
+
+#Create Varibles
 $CurrentDate = get-date -f dd-MM-yyyy_THH-mm-ss #Get Current date and time
 $AllIPsArray = @() # wipe All IPs Array table
 $UniqueIPsArray = @() # wipe Unique IPs Array table
+#$APIKey = "3f04563e352f465e8d82b5910829a8b8" # Set API Key
 $APIKey = Read-Host -Prompt "Enter your VPNAPI.io API Key: " #Prompt for VPNAPI.io API Key
+
 $MScsvPath = Read-Host -Prompt "Enter your Microsoft report CSV path without quotes: " #Prompt for RAW InteractiveSignIns export file
 $RootdirectoryPath = Split-Path -Path $MScsvPath #Get RAW InteractiveSignIns file location
 New-Item -Path $RootdirectoryPath -Name $CurrentDate -ItemType "directory" #Create new folder for this job
@@ -25,7 +37,7 @@ $OldfirstLine = Get-Content -Path $MScsvPath | Select-Object -First 1
 [regex]$pattern = "Incoming token type"
 $NewfirstLine = $pattern.replace($OldfirstLine, "Token", 1) 
 
-#Replace "IP Address" with "IP" in the file
+#Replace "IP Address" with "IP" in file
 $NewfirstLine = $NewfirstLine.Replace("IP address","IP")
 
 #Replace 1st line of string
@@ -33,7 +45,7 @@ $x = Get-Content $MScsvPath
 $x[0] = $NewfirstLine
 $x | Out-File $TempMScsvPath
 
-#Import Fixed CSV and add to Array to get Unique IPs
+#Import Fixed CSV and add to Array to get only Unique IPs
 Import-Csv -Path $TempMScsvPath | ForEach-Object {
     $IP = $_.IP
     $AllIPsArray += $IP 
@@ -61,7 +73,7 @@ ForEach ($UniqueIP in $UniqueIPsArray){
 $data = Get-Content $OutPath
 $data[0..($data.count-2)] | Out-File $OutPath
 
-#Check if the Final CSV is correct
+#Check if Final CSV is correct
 $FinalCSVsize = (Get-Content $OutPath | Measure-Object -Line).Lines
 $FinalCSVsize = $FinalCSVsize-1
 
@@ -75,7 +87,7 @@ else {
     Write-Host "Final CSV is incorrect" -BackgroundColor Red
 }
 
-#Ask if the user wants to keep temp files
+#Ask if user want to keep temp files
 $DeleteTemp = Read-Host "Want to keep temp files [y/n]"
 while($DeleteTemp -ne "y")
 {
