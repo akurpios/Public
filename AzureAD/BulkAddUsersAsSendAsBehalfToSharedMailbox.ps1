@@ -34,11 +34,11 @@ ForEach-Object {
     Add-RecipientPermission -Identity $DestinationMailbox -AccessRights SendAs -Trustee $UPN -Confirm:$false
     If($?)  
      {  
-     Write-Host $UPN" Successfully added to "$Identity" as SendAs." -ForegroundColor Green 
+     Write-Host $UPN" Successfully added to "$DestinationMailbox" as SendAs." -ForegroundColor Green 
      }  
      Else  
      {  
-     Write-Host $UPN" has NOT BEEN added to "$Identity" as SendAs." - Error occurred –ForegroundColor Red  
+     Write-Host $UPN" has NOT BEEN added to "$DestinationMailbox" as SendAs." - Error occurred –ForegroundColor Red  
      }  
 
     write-host "*******************************`r`n"
