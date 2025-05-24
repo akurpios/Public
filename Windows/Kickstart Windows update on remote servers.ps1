@@ -7,7 +7,7 @@ Start-Transcript -Path $TranscriptPatch
 function Show-Menu
 {
     param (
-        [string]$Title = Kickstart Windows update on remote servers'
+        [string]$Title = "Kickstart Windows update on remote servers"
     )
     Clear-Host
     Write-Host "================ $Title ================"
