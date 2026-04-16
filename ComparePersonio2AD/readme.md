@@ -1,5 +1,8 @@
 # ComparePersonio2AD.ps1
 
+<img width="1080" height="954" alt="image" src="https://github.com/user-attachments/assets/65a148f2-ca5a-416c-aa75-2344b7b24793" />
+
+
 A professional PowerShell-based GUI tool designed to audit Human Resources data from **Personio** against **Active Directory (AD)**. This script identifies missing accounts and data discrepancies (e.g., mismatched job titles or departments) and exports the results to CSV and a multi-sheet Excel workbook.
 
 ## Features
