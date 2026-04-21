@@ -1,62 +1,44 @@
-# ComparePersonio2AD.ps1
+# Personio to AD Sync & Compare Tool
 
-<img width="1080" height="954" alt="image" src="https://github.com/user-attachments/assets/65a148f2-ca5a-416c-aa75-2344b7b24793" />
+<img width="2172" height="1880" alt="image" src="https://github.com/user-attachments/assets/86c2f2e9-a1b6-42e7-bc02-02c275ee4889" />
 
 
-A professional PowerShell-based GUI tool designed to audit Human Resources data from **Personio** against **Active Directory (AD)**. This script identifies missing accounts and data discrepancies (e.g., mismatched job titles or departments) and exports the results to CSV and a multi-sheet Excel workbook.
+## Overview
+This tool is a professional PowerShell-based GUI application designed to synchronize employee data between **Personio (HRIS)** and **Active Directory (AD)**. It identifies discrepancies in user attributes and allows administrators to selectively update Active Directory to match the "source of truth" (Personio).
 
-## Features
+## Key Features
+* **Two-Stage Analysis**: 
+    * **Stage 1**: Fetches all employees from Personio API (with full pagination support).
+    * **Stage 2**: Performs a 1:1 comparison for each user against Active Directory based on their UPN (Email).
+* **Real-time Progress Tracking**: Enhanced progress bar and status labels showing exactly which user is being processed (e.g., "Comparing user 175 of 718").
+* **Excel Reporting**: Automatically generates an `EmployeeComparison.xlsx` report with three sheets: Personio Data, AD Data, and Mismatches.
+* **Selective Sync**: Integrated filtering and selection system to choose specific attributes or users for synchronization.
+* **Safety First**: No data is changed in AD until the "Sync Selected to AD" button is manually pressed.
 
-* **Graphical User Interface (GUI):** No need to edit script variables; input credentials and paths directly into the window.
-* **Silent Execution:** The PowerShell console is automatically hidden upon launch for a clean, application-like experience.
-* **Personio Integration:** Uses the Personio REST API with automatic token rotation for large datasets.
-* **AD Synchronization Audit:** Matches users via `UserPrincipalName` (UPN) and performs manager email resolution.
-* **Difference Detection:** Compares 9 key attributes: GivenName, Surname, Title, Office, Company, Department, ManagerEmail, MobilePhone, and OfficePhone.
-* **Multi-Format Export:** Generates two raw CSV files and one formatted `.xlsx` report with a dedicated "Mismatches" sheet.
+## Logging System (SyncLog.txt)
+Auditability is a core feature of this tool. Every single modification made to the Active Directory is recorded in a plain-text log file named **`SyncLog.txt`**, located in your chosen Export Folder.
 
-## Prerequisites
+Each log entry includes:
+* **Timestamp**: Date and time of the operation.
+* **Admin**: The Windows username of the person who ran the script.
+* **Target Account**: The UPN (Email) of the modified user.
+* **Attribute**: The specific field that was changed (e.g., Job Title, Department, Manager).
+* **Value Change**: A clear record of the `Old Value` (previous AD state) vs. the `New Value` (applied from Personio).
 
-1.  **Windows OS:** Requires Windows PowerShell 5.1 or PowerShell 7.
-2.  **Active Directory Module:** Must be run on a machine with RSAT (Remote Server Administration Tools) installed.
-3.  **ImportExcel Module:** The script will attempt to install this automatically if missing (requires internet access).
-4.  **Personio API Credentials:** You need a **Client ID** and **Client Secret** with "Read" permissions for Employee data.
+**Example Log Format:**
+`[2024-05-20 14:30:05] Admin: DOMAIN\admin.user | Target: john.doe@company.com | Attr: Title | Old: 'Junior Dev' | New: 'Senior Dev'`
 
-## How It Works
+## Requirements
+* **Permissions**: Must be run by a user with rights to modify objects in Active Directory.
+* **Modules**: Requires `ActiveDirectory` and `ImportExcel` PowerShell modules (the script attempts to install `ImportExcel` if missing).
+* **Connectivity**: Requires internet access to reach Personio API and local network access to the Domain Controller.
 
-### Step 1: Authentication
-The script connects to the Personio `/auth` endpoint. Because Personio rotates the Bearer token with every response, the script dynamically updates the authorization header during the session to prevent timeouts.
-
-### Step 2: Data Extraction
-The script fetches all active employees from Personio in batches of 200. It flattens the nested JSON structure into a clean object list.
-
-### Step 3: Active Directory Audit
-For every email address found in Personio:
-1.  It queries AD for a matching `UserPrincipalName`.
-2.  If the user exists, it resolves the AD Manager (translating the DistinguishedName into an Email address).
-3.  It compares each field between Personio and AD.
-
-### Step 4: Reporting
-The script saves the data to the specified export folder:
-* `PersonioEmployees.csv`: Raw data from the HR system.
-* `ADEmployees.csv`: Raw data retrieved from Active Directory.
-* `EmployeeComparison.xlsx`: A formatted workbook containing:
-    * **Personio Sheet**: All HR records.
-    * **AD Sheet**: All matching IT records.
-    * **Mismatches Sheet**: A list of every discrepancy found (e.g., if a user's title in HR differs from their title in IT).
-
-## Usage
-
-1.  Right-click `ComparePersonio2AD.ps1` and select **Run with PowerShell**.
-2.  The console will hide, and a GUI window will appear.
-3.  Paste your **Client ID** and **Client Secret**.
-4.  Type or Browse for an **Export Folder**.
-5.  Click **Start Sync Process**.
-6.  Once the "Success" message appears, check your folder for the reports.
+## How to Use
+1.  **Authentication**: Enter your Personio `Client ID` and `Client Secret`.
+2.  **Export Path**: Select a folder where the Excel reports and `SyncLog.txt` will be saved.
+3.  **Compare**: Click **"1. Compare Systems"**. Monitor the status label for real-time progress of fetching and comparing users.
+4.  **Review**: Use the "Filter" box or "Selection" buttons to review differences in the data grid.
+5.  **Sync**: Click **"2. Sync Selected to AD"** to apply changes. After completion, refer to `SyncLog.txt` for a full audit trail of the session.
 
 ## Security Note
-The **Client Secret** field is masked with asterisks (`*`) for privacy. The script communicates with the Personio API over HTTPS.
-
-## Troubleshooting
-* **Invalid Path:** Ensure you have write permissions to the folder you selected.
-* **Module Errors:** If the script fails to install `ImportExcel`, run PowerShell as Administrator once and manually run: `Install-Module ImportExcel -Scope CurrentUser`.
-* **Zero Results:** Ensure the Personio API credentials have "Read" access to the employee attributes in the Personio settings.
+The `Client Secret` is masked in the UI. However, it is recommended to manage API credentials securely and never hardcode them into the script.
