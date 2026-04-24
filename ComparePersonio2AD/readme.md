@@ -1,10 +1,10 @@
 # Personio to AD Sync & Compare Tool
 
-<img width="2180" height="1894" alt="image" src="https://github.com/user-attachments/assets/a6c4c2b3-6a40-466e-a650-0094573b7198" />
-
-
 ## Overview
 This tool is a professional PowerShell-based GUI application designed to synchronize employee data between **Personio (HRIS)** and **Active Directory (AD)**. It identifies discrepancies in user attributes and allows administrators to selectively update Active Directory to match the "source of truth" (Personio).
+
+<img width="2180" height="1894" alt="image" src="https://github.com/user-attachments/assets/a6c4c2b3-6a40-466e-a650-0094573b7198" />
+
 
 ## Key Features
 * **Two-Stage Analysis**: 
