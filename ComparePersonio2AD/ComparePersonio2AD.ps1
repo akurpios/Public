@@ -27,8 +27,10 @@ $btnBrowse.Add_Click({ $fb = New-Object System.Windows.Forms.FolderBrowserDialog
 $Form.Controls.Add($btnBrowse)
 
 # Main buttons
-$btnRun = New-Object System.Windows.Forms.Button; $btnRun.Text = "1. Compare Systems"; $btnRun.Location = "20,150"; $btnRun.Size = "520,40"; $btnRun.BackColor = "#0078D7"; $btnRun.ForeColor = "White"; $btnRun.Font = $FontLabel; $Form.Controls.Add($btnRun)
-$btnSync = New-Object System.Windows.Forms.Button; $btnSync.Text = "2. Sync Selected to AD"; $btnSync.Location = "560,150"; $btnSync.Size = "500,40"; $btnSync.BackColor = "#28A745"; $btnSync.ForeColor = "White"; $btnSync.Font = $FontLabel; $btnSync.Enabled = $false; $Form.Controls.Add($btnSync)
+$btnRun = New-Object System.Windows.Forms.Button; $btnRun.Text = "1. Compare Systems"; $btnRun.Location = "20,150"; $btnRun.Size = "250,40"; $btnRun.BackColor = "#0078D7"; $btnRun.ForeColor = "White"; $btnRun.Font = $FontLabel; $Form.Controls.Add($btnRun)
+$btnExport = New-Object System.Windows.Forms.Button; $btnExport.Text = "Export Selected"; $btnExport.Location = "280,150"; $btnExport.Size = "250,40"; $btnExport.BackColor = "#6C757D"; $btnExport.ForeColor = "White"; $btnExport.Font = $FontLabel; $btnExport.Enabled = $false; $Form.Controls.Add($btnExport)
+$btnImport = New-Object System.Windows.Forms.Button; $btnImport.Text = "Import Preconfigured"; $btnImport.Location = "540,150"; $btnImport.Size = "250,40"; $btnImport.BackColor = "#17A2B8"; $btnImport.ForeColor = "White"; $btnImport.Font = $FontLabel; $Form.Controls.Add($btnImport)
+$btnSync = New-Object System.Windows.Forms.Button; $btnSync.Text = "Sync Selected to AD"; $btnSync.Location = "800,150"; $btnSync.Size = "260,40"; $btnSync.BackColor = "#28A745"; $btnSync.ForeColor = "White"; $btnSync.Font = $FontLabel; $btnSync.Enabled = $false; $Form.Controls.Add($btnSync)
 
 # Filtering
 $lblSearch = New-Object System.Windows.Forms.Label; $lblSearch.Text = "Filter:"; $lblSearch.Location = "20,205"; $lblSearch.Size = "50,20"; $lblSearch.Font = $FontLabel; $lblSearch.Visible = $false; $Form.Controls.Add($lblSearch)
@@ -61,14 +63,25 @@ $dgv.Add_CellContentClick({
     if ($e.ColumnIndex -eq 0) { $dgv.EndEdit() }
 })
 
+# Prevent checking the box if user is missing in AD
+$dgv.Add_CellBeginEdit({
+    param($sender, $e)
+    if ($e.RowIndex -ge 0 -and $e.ColumnIndex -eq 0) {
+        $row = $dgv.Rows[$e.RowIndex]
+        if ($row.Cells["ADValue"].Value -eq "Missing in AD") {
+            $e.Cancel = $true
+        }
+    }
+})
+
 # Selection logic
-$btnSelAll.Add_Click({ foreach($r in $script:dt.Rows) { $r["Sync"] = $true } })
+$btnSelAll.Add_Click({ foreach($r in $script:dt.Rows) { if ($r["ADValue"] -ne "Missing in AD") { $r["Sync"] = $true } } })
 $btnUnselAll.Add_Click({ foreach($r in $script:dt.Rows) { $r["Sync"] = $false } })
-$btnSelFilt.Add_Click({ foreach($rv in $script:dt.DefaultView) { $rv.Row["Sync"] = $true } })
+$btnSelFilt.Add_Click({ foreach($rv in $script:dt.DefaultView) { if ($rv.Row["ADValue"] -ne "Missing in AD") { $rv.Row["Sync"] = $true } } })
 $btnUnselFilt.Add_Click({ foreach($rv in $script:dt.DefaultView) { $rv.Row["Sync"] = $false } })
-$btnSelPEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["PersonioValue"])) { $r["Sync"] = $true } } })
+$btnSelPEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["PersonioValue"]) -and $r["ADValue"] -ne "Missing in AD") { $r["Sync"] = $true } } })
 $btnUnselPEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["PersonioValue"])) { $r["Sync"] = $false } } })
-$btnSelADEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["ADValue"])) { $r["Sync"] = $true } } })
+$btnSelADEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["ADValue"]) -and $r["ADValue"] -ne "Missing in AD") { $r["Sync"] = $true } } })
 $btnUnselADEmpty.Add_Click({ foreach($r in $script:dt.Rows) { if ([string]::IsNullOrWhiteSpace($r["ADValue"])) { $r["Sync"] = $false } } })
 
 $txtSearch.Add_TextChanged({
@@ -78,9 +91,87 @@ $txtSearch.Add_TextChanged({
     }
 })
 
+# --- Export Logic ---
+$btnExport.Add_Click({
+    $rowsToExport = $script:dt.Select("Sync = True")
+    if ($rowsToExport.Count -eq 0) {
+        $rowsToExport = $script:dt.Select("") 
+    }
+    
+    $saveDialog = New-Object System.Windows.Forms.SaveFileDialog
+    $saveDialog.Filter = "CSV Files (*.csv)|*.csv"
+    $saveDialog.FileName = "Personio_Offline_Sync.csv"
+    if ($saveDialog.ShowDialog() -eq "OK") {
+        $exportData = @()
+        foreach ($r in $rowsToExport) {
+            $exportData += [PSCustomObject]@{
+                Sync = $r["Sync"]; Email = $r["Email"]; AD_DisplayName = $r["AD_DisplayName"]
+                AD_Active = $r["AD_Active"]; Attribute = $r["Attribute"]
+                PersonioValue = $r["PersonioValue"]; ADValue = $r["ADValue"]
+            }
+        }
+        $exportData | Export-Csv -Path $saveDialog.FileName -NoTypeInformation -Encoding UTF8
+        [System.Windows.Forms.MessageBox]::Show("Export completed successfully.", "Success", 0, 64)
+    }
+})
+
+# --- Import Logic ---
+$btnImport.Add_Click({
+    $openDialog = New-Object System.Windows.Forms.OpenFileDialog
+    $openDialog.Filter = "CSV Files (*.csv)|*.csv"
+    if ($openDialog.ShowDialog() -eq "OK") {
+        try {
+            $importedData = Import-Csv -Path $openDialog.FileName -Encoding UTF8
+            
+            if ($script:dt.Columns.Count -eq 0) {
+                $null = $script:dt.Columns.Add("Sync", [bool]); $null = $script:dt.Columns.Add("Email", [string])
+                $null = $script:dt.Columns.Add("AD_DisplayName", [string]); $null = $script:dt.Columns.Add("AD_Active", [string])
+                $null = $script:dt.Columns.Add("Attribute", [string]); $null = $script:dt.Columns.Add("PersonioValue", [string]); $null = $script:dt.Columns.Add("ADValue", [string])
+            }
+            
+            $script:dt.Clear()
+            
+            foreach ($row in $importedData) {
+                $newRow = $script:dt.NewRow()
+                $syncVal = $false
+                if ($row.Sync -match "(?i)True|1") { $syncVal = $true }
+                
+                $newRow["Sync"] = $syncVal
+                $newRow["Email"] = $row.Email
+                $newRow["AD_DisplayName"] = $row.AD_DisplayName
+                $newRow["AD_Active"] = $row.AD_Active
+                $newRow["Attribute"] = $row.Attribute
+                $newRow["PersonioValue"] = $row.PersonioValue
+                $newRow["ADValue"] = $row.ADValue
+                $script:dt.Rows.Add($newRow)
+            }
+            
+            $dgv.DataSource = $script:dt.DefaultView
+            $dgv.Columns["Sync"].SortMode = "Automatic"
+            $pnlSelect.Visible = $true; $lblSearch.Visible = $true; $txtSearch.Visible = $true
+            $btnSync.Enabled = $true
+            $btnExport.Enabled = $true
+            $lblStatus.Text = "Imported $($script:dt.Rows.Count) rows from CSV. Ready to Sync."
+            $lblStatus.ForeColor = "DarkGreen"
+        } catch {
+            [System.Windows.Forms.MessageBox]::Show("Failed to import CSV: $($_.Exception.Message)", "Error", 0, 16)
+        }
+    }
+})
+
 # --- Analyze ---
 $btnRun.Add_Click({
-    if ([string]::IsNullOrWhiteSpace($txtClientId.Text) -or [string]::IsNullOrWhiteSpace($txtFolder.Text)) { return }
+    if ([string]::IsNullOrWhiteSpace($txtClientId.Text) -or [string]::IsNullOrWhiteSpace($txtSecret.Text)) { 
+        [System.Windows.Forms.MessageBox]::Show("Please provide Personio Client ID and Secret.", "Missing Information", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        return 
+    }
+    
+    # FOLDER VALIDATION
+    if ([string]::IsNullOrWhiteSpace($txtFolder.Text) -or -not (Test-Path $txtFolder.Text)) {
+        [System.Windows.Forms.MessageBox]::Show("Export Folder is missing or does not exist. Please provide a valid folder path.", "Invalid Folder", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        return
+    }
+
     $btnRun.Enabled = $false; $pb.Value = 0; $lblStatus.Text = "Connecting to Personio..."; $Form.Refresh()
     
     $script:dt = New-Object System.Data.DataTable
@@ -133,8 +224,13 @@ $btnRun.Add_Click({
 
             if ([string]::IsNullOrWhiteSpace($p.Email)) { continue }
             
+            # FALLBACK TO EMAILADDRESS LOGIC
             $ad = Get-ADUser -Filter "UserPrincipalName -eq '$($p.Email)'" -Properties GivenName, Surname, Title, Office, Department, Manager, Company, MobilePhone, OfficePhone, DisplayName, Enabled -ErrorAction SilentlyContinue
             
+            if (-not $ad) {
+                $ad = Get-ADUser -Filter "EmailAddress -eq '$($p.Email)'" -Properties GivenName, Surname, Title, Office, Department, Manager, Company, MobilePhone, OfficePhone, DisplayName, Enabled -ErrorAction SilentlyContinue
+            }
+
             if ($ad) {
                 $adMgrMail = ""; if ($ad.Manager) { $mObj = Get-ADUser $ad.Manager -Properties EmailAddress -ErrorAction SilentlyContinue; if($mObj){$adMgrMail = [string]$mObj.EmailAddress} }
                 
@@ -157,7 +253,18 @@ $btnRun.Add_Click({
                     }
                 }
             } else { 
+                # MISSING IN AD LOGIC
                 $adList += [PSCustomObject]@{ ADStatus="Not Found"; Email=$p.Email; GivenName=""; Surname=""; DisplayName=""; Enabled=""; Title=""; Office=""; Company=""; Department=""; ManagerEmail=""; MobilePhone=""; OfficePhone="" } 
+                
+                $row = $script:dt.NewRow()
+                $row["Sync"]=$false
+                $row["Email"]=$p.Email
+                $row["AD_DisplayName"]="NOT FOUND"
+                $row["AD_Active"]="N/A"
+                $row["Attribute"]="Account"
+                $row["PersonioValue"]="Exists in Personio"
+                $row["ADValue"]="Missing in AD"
+                $script:dt.Rows.Add($row)
             }
         }
 
@@ -170,7 +277,9 @@ $btnRun.Add_Click({
         $dgv.DataSource = $script:dt.DefaultView
         $dgv.Columns["Sync"].SortMode = "Automatic"
         $pnlSelect.Visible = $true; $lblSearch.Visible = $true; $txtSearch.Visible = $true
-        $lblStatus.Text = "Analysis done. Reports saved to Excel."; $lblStatus.ForeColor = "DarkGreen"; $btnSync.Enabled = $true
+        $lblStatus.Text = "Analysis done. Reports saved to Excel."; $lblStatus.ForeColor = "DarkGreen"
+        $btnSync.Enabled = $true
+        $btnExport.Enabled = $true
 
     } catch {
         $lblStatus.Text = "Error: $($_.Exception.Message)"; $lblStatus.ForeColor = "Red"
@@ -179,9 +288,36 @@ $btnRun.Add_Click({
 
 # --- Sync logic and log to TXT ---
 $btnSync.Add_Click({
-    $rows = $script:dt.Select("Sync = True")
-    if ($rows.Count -eq 0) { return }
+    # FOLDER VALIDATION BEFORE SYNC
+    if ([string]::IsNullOrWhiteSpace($txtFolder.Text) -or -not (Test-Path $txtFolder.Text)) {
+        [System.Windows.Forms.MessageBox]::Show("Export Folder is missing or does not exist. Please provide a valid path to save the SyncLog.txt file.", "Invalid Folder", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        return
+    }
+
+    $rows = $script:dt.Select("Sync = True AND ADValue <> 'Missing in AD'")
+    if ($rows.Count -eq 0) { 
+        [System.Windows.Forms.MessageBox]::Show("No valid items selected for synchronization.", "Information", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Information)
+        return 
+    }
     
+    # CONFIRMATION DIALOG WITH USER LIST
+    $uniqueUsers = @()
+    foreach ($r in $rows) {
+        if ($r["Email"] -notin $uniqueUsers) { $uniqueUsers += $r["Email"] }
+    }
+
+    $displayUsers = $uniqueUsers | Select-Object -First 15
+    $usersList = $displayUsers -join "`n"
+    if ($uniqueUsers.Count -gt 15) {
+        $usersList += "`n... and $($uniqueUsers.Count - 15) more."
+    }
+
+    $confirmMsg = "You are about to modify Active Directory attributes for $($uniqueUsers.Count) user(s):`n`n$usersList`n`nDo you want to proceed?"
+    $dialogResult = [System.Windows.Forms.MessageBox]::Show($confirmMsg, "Confirm Synchronization", [System.Windows.Forms.MessageBoxButtons]::YesNo, [System.Windows.Forms.MessageBoxIcon]::Question)
+    
+    if ($dialogResult -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+
+    # SYNC EXECUTION
     $logPath = Join-Path $txtFolder.Text "SyncLog.txt"
     $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
     
@@ -193,6 +329,8 @@ $btnSync.Add_Click({
             $adMap = @{ "Title"="Title"; "Department"="Department"; "Company"="Company"; "GivenName"="GivenName"; "Surname"="Surname"; "Office"="Office"; "Mobile"="MobilePhone"; "Phone"="OfficePhone" }
             
             $u = Get-ADUser -Filter "UserPrincipalName -eq '$email'"
+            if (-not $u) { $u = Get-ADUser -Filter "EmailAddress -eq '$email'" } # Safety fallback during sync
+            
             if ($attr -eq "ManagerEmail") {
                 if ([string]::IsNullOrWhiteSpace($val)) { Set-ADUser -Identity $u.SamAccountName -Manager $null }
                 else { $mgr = Get-ADUser -Filter "EmailAddress -eq '$val'"; Set-ADUser -Identity $u.SamAccountName -Manager $mgr.DistinguishedName }
@@ -200,7 +338,7 @@ $btnSync.Add_Click({
                 Set-ADUser -Identity $u.SamAccountName -Replace @{ $($adMap[$attr]) = $val }
             }
             
-            # WPIS DO LOGA PO UDANEJ ZMIANIE
+            # RECORD THE LOG OF CHANGE
             $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
             $logEntry = "[$timestamp] Admin: $currentUser | Target: $email | Attr: $attr | Old: '$oldVal' | New: '$val'"
             Add-Content -Path $logPath -Value $logEntry
