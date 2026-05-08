@@ -2,6 +2,9 @@
 
 A lightweight, GUI-based PowerShell application designed to simplify the installation of network shared printers for end-users via Microsoft Intune or manual deployment.
 
+<img width="808" height="1134" alt="image" src="https://github.com/user-attachments/assets/f4cdd182-f4b2-410b-85cb-e5aa1828885e" />
+
+
 ## Features
 
 * **Dynamic Printer Listing:** Automatically fetches and displays all shared printers from a specified print server.
